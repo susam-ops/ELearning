@@ -1,19 +1,34 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { deleteScheduleApi, getScheduleApi } from "../api/schedule.api";
-import { FaCalendarAlt, FaEdit, FaTrash, FaClock, FaChalkboardTeacher } from "react-icons/fa";
+import {
+  deleteScheduleApi,
+  getScheduleApi,
+  updateScheduleApi,
+} from "../api/schedule.api";
+import {
+  FaCalendarAlt,
+  FaEdit,
+  FaTrash,
+  FaClock,
+  FaTimes,
+  FaSave,
+} from "react-icons/fa";
 
 function ScheduleDetails() {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingSchedule, setEditingSchedule] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    level: "",
+    faculty: "",
+    subject: "",
+    startTime: "",
+    endTime: "",
+  });
 
   useEffect(() => {
-    console.log("useEffects in ScheduleDetails");
     const fetchSchedulesDetails = async () => {
       try {
-        console.log("check useEffec");
         const res = await getScheduleApi();
-        console.log("res is: ", res?.user);
         setSchedules(res?.user || []);
       } catch (error) {
         console.error("Error fetching schedule details:", error);
@@ -37,8 +52,172 @@ function ScheduleDetails() {
     }
   };
 
+  const handleEditClick = (schedule) => {
+    setEditingSchedule(schedule._id);
+    setEditFormData({
+      level: schedule.level || "",
+      faculty: schedule.faculty || "",
+      subject: schedule.subject || "",
+      startTime: schedule.startTime || "",
+      endTime: schedule.endTime || "",
+    });
+  };
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData({
+      ...editFormData,
+      [name]: value,
+    });
+  };
+
+  const handleEditFormSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await updateScheduleApi(editingSchedule, editFormData);
+
+      // Update local state
+      setSchedules(
+        schedules.map((schedule) =>
+          schedule._id === editingSchedule
+            ? { ...schedule, ...editFormData }
+            : schedule
+        )
+      );
+
+      setEditingSchedule(null);
+      alert("Schedule updated successfully!");
+    } catch (error) {
+      console.error("Error updating schedule:", error);
+      alert("Failed to update schedule.");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSchedule(null);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      {/* Edit Form Modal */}
+      {editingSchedule && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-indigo-900">
+                  Edit Schedule
+                </h3>
+                <button
+                  onClick={handleCancelEdit}
+                  className="text-gray-500 hover:text-gray-700"
+                  type="button"
+                >
+                  <FaTimes className="h-5 w-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleEditFormSubmit}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Level
+                    </label>
+                    <select
+                      name="level"
+                      value={editFormData.level}
+                      onChange={handleEditFormChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    >
+                      <option value="">Select Level</option>
+                      <option value="11">11</option>
+                      <option value="12">12</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Faculty
+                    </label>
+                    <select
+                      name="faculty"
+                      value={editFormData.faculty}
+                      onChange={handleEditFormChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    >
+                      <option value="">Select Faculty</option>
+                      <option value="science">Science</option>
+                      <option value="management">Management</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Subject
+                    </label>
+                    <input
+                      type="text"
+                      name="subject"
+                      value={editFormData.subject}
+                      onChange={handleEditFormChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Time
+                    </label>
+                    <input
+                      type="time"
+                      name="startTime"
+                      value={editFormData.startTime}
+                      onChange={handleEditFormChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      End Time
+                    </label>
+                    <input
+                      type="time"
+                      name="endTime"
+                      value={editFormData.endTime}
+                      onChange={handleEditFormChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-8 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center"
+                  >
+                    <FaSave className="mr-2" />
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -91,66 +270,54 @@ function ScheduleDetails() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {schedules.length > 0 ? (
                     schedules.map((schedule) => (
-                      <tr key={schedule._id} className="hover:bg-indigo-50 transition-colors">
+                      <tr
+                        key={schedule._id}
+                        className="hover:bg-indigo-50 transition-colors"
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold">
-                                {schedule.teacherId?.userId?.fullName?.charAt(0) || "T"}
-                              </div>
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
-                                {schedule.teacherId?.userId?.fullName || "N/A"}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                ID: {schedule.teacherId?._id?.substring(0, 8)}...
-                              </div>
-                            </div>
-                          </div>
+                          {schedule.teacherId?.userId?.fullName || "N/A"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            schedule.level === "Undergraduate" 
-                              ? "bg-blue-100 text-blue-800" 
-                              : schedule.level === "Graduate" 
-                              ? "bg-purple-100 text-purple-800" 
-                              : "bg-indigo-100 text-indigo-800"
-                          }`}>
-                            {schedule.level}
-                          </span>
+                          {schedule.level || "N/A"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap">
                           {schedule.faculty || "N/A"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {schedule.subject || "N/A"}
-                          </div>
+                          {schedule.subject || "N/A"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 font-medium flex items-center">
-                            <FaClock className="h-4 w-4 text-indigo-500 mr-1" />
-                            {schedule.startTime}
+                          <div className="text-sm text-gray-900 flex items-center">
+                          <FaClock className="h-4 w-4 text-indigo-500 mr-1" />
+                          {schedule.startTime}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 font-medium flex items-center">
-                            <FaClock className="h-4 w-4 text-indigo-500 mr-1" />
-                            {schedule.endTime}
+                        <td className="px-6 py-4 whitespace-nowrap ">
+                          <div className="text-sm text-gray-900 flex items-center">
+                          <FaClock className="h-4 w-4 text-indigo-500 mr-1" />
+                          {schedule.endTime}
                           </div>
                         </td>
+                         
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-3">
-                            <Link
-                              to={`/admin/editschedule/${schedule._id}`}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditClick(schedule);
+                              }}
                               className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors"
+                              type="button"
                             >
                               <FaEdit />
-                            </Link>
+                            </button>
                             <button
-                              onClick={() => handleDelete(schedule._id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(schedule._id);
+                              }}
                               className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors"
+                              type="button"
                             >
                               <FaTrash />
                             </button>
@@ -160,12 +327,11 @@ function ScheduleDetails() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="px-6 py-12 text-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-indigo-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <h3 className="text-lg font-semibold text-gray-700">No schedules found</h3>
-                        <p className="text-gray-500 mt-1">There are no schedules in the system yet.</p>
+                      <td
+                        colSpan="7"
+                        className="px-6 py-12 text-center text-gray-500"
+                      >
+                        No schedules found
                       </td>
                     </tr>
                   )}

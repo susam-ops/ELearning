@@ -7,6 +7,7 @@ import {
   FaCalendarAlt,
   FaBell,
   FaSignOutAlt,
+  FaBullhorn,
 } from "react-icons/fa";
 import { MdAssignment, MdQuiz, MdVideoLibrary } from "react-icons/md";
 import { NavLink, Outlet } from "react-router-dom";
@@ -43,12 +44,6 @@ const Teacher = () => {
             <h1 className="text-xl font-bold">EduStream Teacher Portal</h1>
           </div>
           <div className="flex items-center space-x-6">
-            <button className="relative">
-              <FaBell className="text-xl" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                3
-              </span>
-            </button>
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center">
                 <FaChalkboardTeacher className="text-sm" />
@@ -67,19 +62,32 @@ const Teacher = () => {
         <aside className="hidden md:block fixed top-16 left-0 w-64 h-[calc(100vh-4rem)] mt-8 mx-2 bg-white rounded-r-lg shadow-md p-4 overflow-y-auto z-10">
           <nav className="space-y-1">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-col items-center mb-6 p-4 border-b">
+              {/* <div className="flex flex-col items-center mb-6 p-4 border-b">
                 <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-3">
                   <FaChalkboardTeacher className="text-2xl text-indigo-600" />
                 </div>
                 <h2 className="font-bold text-center">
                   {teacherData?.fullName ?? "Loading..."}
                 </h2>
-              </div>
+              </div> */}
+              
+              {/* <div className="flex flex-col gap-4 mt-6"> */}
+                            <NavLink
+                              to=""
+                              className="font-semibold flex text-lg items-center gap-2 p-2 rounded-md"
+                              
+                            >
+                              <FaChartBar className="text-xl" />
+                              <span>Dashboard</span>
+                            </NavLink>
+                            
+             
 
               {[
-                { to: "", label: "Dashboard", icon: <FaChartBar className="text-xl" /> },
-                { to: "mycourses", label: "My Course", icon: <FaBook className="text-lg" /> },
+                // { to: "", label: "Dashboard", icon: <FaChartBar className="text-xl" /> },
                 { to: "student", label: "Student", icon: <FaUsers className="text-lg" /> },
+                { to: "schedule", label: "Schedule", icon: <FaCalendarAlt className="text-lg" /> },
+                { to: "mycourses", label: "My Course", icon: <FaBook className="text-lg" /> },
                 { to: "content", label: "Content", icon: <MdVideoLibrary className="text-lg" /> },
                 // { to: "mycontent", label: "MyContent", icon: <MdVideoLibrary className="text-lg" /> },
                 { to: "assignment", label: "Assignment", icon: <MdAssignment className="text-lg" /> },
@@ -87,7 +95,10 @@ const Teacher = () => {
                 // { to: "myassignment", label: "MyAssignment", icon: <MdAssignment className="text-lg" /> },
                 { to: "quiz", label: "Quizzes", icon: <MdQuiz className="text-xl" /> },
                 // { to: "teacherquiz", label: "Quizzes", icon: <MdQuiz className="text-xl" /> },
-                { to: "schedule", label: "Schedule", icon: <FaCalendarAlt className="text-lg" /> },
+                { to: "announcement", label: "Announcement", icon: <FaBullhorn className="text-lg" /> },
+                { to: "class", label: "Class", icon: <FaChalkboardTeacher className="text-lg" /> },
+                // { to: "teachermeeting", label: "Class", icon: <FaChalkboardTeacher className="text-lg" /> },
+                // { to: "myannouncement", label: "Announcement", icon: <FaBullhorn className="text-lg" /> },
                 { to: "teacherlogout", label: "Logout", icon: <FaSignOutAlt className="text-lg" /> },
                 // { to: "scheduletable", label: "ScheduleTable", icon: <FaCalendarAlt className="text-lg" /> },
               ].map(({ to, label, icon }) => (

@@ -43,12 +43,7 @@ const Admin = () => {
                 <h1 className="text-xl font-bold">EduStream Admin Portal</h1>
               </div>
               <div className="flex items-center space-x-6">
-                <button className="relative">
-                  <FaBell className="text-xl" />
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                    5
-                  </span>
-                </button>
+                
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center">
                     <FaUserPlus className="text-sm" />
@@ -86,7 +81,7 @@ const Admin = () => {
                     }
                   >
                     <FaUsers className="text-lg" />
-                    <span>User Management</span>
+                    <span>Student Management</span>
                   </NavLink>
 
                   <NavLink

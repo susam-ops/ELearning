@@ -1,11 +1,11 @@
 import apiClient from "../utils/apiclient";
 
-export const addAssignmentApi = async (courseId,assignmentData) => {
+export const addAnnouncementApi = async (courseId,announcementData) => {
   try {
     const data = await apiClient.request({
       method: "POST",
-      url: `/teacher/courses/${courseId}/announcemnt`,
-      data: assignmentData,
+      url: `/teacher/courses/${courseId}/announcement`,
+      data: announcementData,
     
       withCredentials: true,
     });
@@ -17,15 +17,15 @@ export const addAssignmentApi = async (courseId,assignmentData) => {
   }
 };
 
-export const getAssignmentApi = async (teacherId) => {
+export const getAnnouncementApi = async (teacherId) => {
   try {
     const data = await apiClient.request({
       method: "GET",
-      url: `/teacher/${teacherId}/assignment`,
+      url: `/teacher/${teacherId}/announcement`,
       withCredentials:true,
     });
 
-    console.log("assignment details", data); 
+    console.log("announcement details", data); 
 
 
     return data;
@@ -35,12 +35,12 @@ export const getAssignmentApi = async (teacherId) => {
   }
 };
 
-export const getAssignmentsForStudentApi = async (level,faculty) => {
+export const getAnnouncementsForStudentApi = async (level,faculty) => {
   console.log("faculty in api is",level,faculty)
   try {
     const data = await apiClient.request({
       method: "POST",
-      url: "/student/assignment",
+      url: "/student/announcement",
      data: { level,faculty },
       withCredentials: true,
     });

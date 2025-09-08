@@ -70,7 +70,6 @@ const Userassignment = ({ level, faculty, studentId }) => {
 
           const normalized = Object.values(grouped);
           setAssignmentsByCourse(normalized);
-          if (normalized.length > 0) setExpandedCourses({ [normalized[0].courseId]: true });
         } else {
           setError("Invalid response format from server");
         }
@@ -148,7 +147,7 @@ const Userassignment = ({ level, faculty, studentId }) => {
       const formData = new FormData();
       formData.append("assignmentId", submissionModal.assignment.id);
       formData.append("teacherId", submissionModal.assignment.teacherId);
-      formData.append("studentId", studentId); // ✅ use prop directly
+      formData.append("studentId", studentId);
       if (submissionText) formData.append("answer", submissionText);
       if (submissionFile) formData.append("file", submissionFile);
 
@@ -250,40 +249,68 @@ const Userassignment = ({ level, faculty, studentId }) => {
             {filteredCourses.map((course) => (
               <div key={course.courseId} className="bg-white rounded-lg shadow-sm overflow-hidden">
                 <div
-                  className="p-4 border-b border-gray-100 flex justify-between items-center cursor-pointer hover:bg-gray-50"
+                  className="p-4 border-b border-gray-100 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-colors"
                   onClick={() => toggleCourseExpansion(course.courseId)}
                 >
                   <div className="flex items-center">
-                    <div className="mr-3 text-blue-600">{expandedCourses[course.courseId] ? <FaChevronDown /> : <FaChevronRight />}</div>
+                    <div className="mr-3 text-blue-600">
+                      {expandedCourses[course.courseId] ? <FaChevronDown /> : <FaChevronRight />}
+                    </div>
                     <div>
                       <h2 className="font-semibold text-lg">{course.courseName}</h2>
-                      <p className="text-sm text-gray-500">{course.assignments.length} assignments</p>
+                      <p className="text-sm text-gray-500">
+                        {course.assignments.length} assignment{course.assignments.length !== 1 ? 's' : ''}
+                      </p>
                     </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {course.assignments.some(a => a.status === "urgent") && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        Urgent
+                      </span>
+                    )}
+                    {course.assignments.some(a => a.status === "overdue") && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Overdue
+                      </span>
+                    )}
                   </div>
                 </div>
 
                 {expandedCourses[course.courseId] && (
                   <div className="p-4 bg-gray-50 space-y-4">
-                    {course.assignments.map((assignment) => (
-                      <div key={assignment.id} className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
-                        <div className="flex justify-between items-start mb-3">
-                          <h3 className="font-semibold text-gray-800">{assignment.title}</h3>
-                          {getStatusBadge(assignment.status, assignment.daysUntilDue)}
-                        </div>
-                        <p className="text-gray-600 mb-4">{assignment.description}</p>
-                        <div className="flex justify-between items-center">
-                          <div className="text-sm text-gray-500">Teacher ID: {assignment.teacherId}</div>
-                          {assignment.status !== "submitted" && (
-                            <button
-                              onClick={() => openSubmissionModal(assignment, course)}
-                              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center"
-                            >
-                              <FaPaperPlane className="mr-2" /> Submit
-                            </button>
-                          )}
-                        </div>
+                    {course.assignments.length === 0 ? (
+                      <div className="text-center py-4 text-gray-500">
+                        No assignments in this course match your filters
                       </div>
-                    ))}
+                    ) : (
+                      course.assignments.map((assignment) => (
+                        <div key={assignment.id} className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
+                          <div className="flex justify-between items-start mb-3">
+                            <h3 className="font-semibold text-gray-800">{assignment.title}</h3>
+                            {getStatusBadge(assignment.status, assignment.daysUntilDue)}
+                          </div>
+                          <p className="text-gray-600 mb-4">{assignment.description}</p>
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                            <div className="text-sm text-gray-500">
+                              Due: {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : 'No due date'}
+                            </div>
+                            {assignment.status !== "submitted" ? (
+                              <button
+                                onClick={() => openSubmissionModal(assignment, course)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+                              >
+                                <FaPaperPlane className="mr-2" /> Submit
+                              </button>
+                            ) : (
+                              <div className="text-sm text-green-600">
+                                Submitted on: {new Date(assignment.submissionDate).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
               </div>

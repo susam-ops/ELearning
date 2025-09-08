@@ -19,7 +19,7 @@ export const getStudentApi = async () => {
   }
 };
 
-export const deleteStudentApi = async (teacherId) => {
+export const deleteStudentApi = async (studentId) => {
   try {
     const data = await apiClient.request({
       method: "DELETE",
@@ -27,7 +27,7 @@ export const deleteStudentApi = async (teacherId) => {
       withCredentials: true,
     });
 
-    console.log("GETTEACHER API: ",data)
+    console.log("DELETE API: ",data)
 
     return data;
   } catch (error) {

@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { FaBook, FaQuestionCircle, FaClock, FaPlay, FaSearch, FaFilter } from "react-icons/fa";
+import { FaBook, FaQuestionCircle, FaClock, FaPlay, FaSearch, FaFilter, FaChevronRight, FaGraduationCap } from "react-icons/fa";
 import { getQuizForStudentApi } from "../api/quiz.api";
 import { useNavigate } from "react-router-dom";
 
 const UserQuizzes = ({ level, faculty }) => {
   const [quizzes, setQuizzes] = useState([]);
-  const [filteredQuizzes, setFilteredQuizzes] = useState([]);
+  const [groupedQuizzes, setGroupedQuizzes] = useState({});
+  const [filteredGroupedQuizzes, setFilteredGroupedQuizzes] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+  const [expandedSubject, setExpandedSubject] = useState(null);
   const navigate = useNavigate();
 
   // Fetch quizzes from API
@@ -21,7 +23,7 @@ const UserQuizzes = ({ level, faculty }) => {
         const response = await getQuizForStudentApi(level, faculty);
         const quizList = response?.user || [];
         setQuizzes(quizList);
-        setFilteredQuizzes(quizList);
+        groupQuizzesBySubject(quizList);
       } catch (err) {
         console.error("Error fetching quizzes:", err);
         setError("Failed to load quizzes. Please try again later.");
@@ -35,39 +37,73 @@ const UserQuizzes = ({ level, faculty }) => {
     }
   }, [faculty, level]);
 
+  // Group quizzes by subject
+  const groupQuizzesBySubject = (quizList) => {
+    const grouped = {};
+    
+    quizList.forEach(quiz => {
+      const subject = quiz.subject || "Other";
+      
+      if (!grouped[subject]) {
+        grouped[subject] = [];
+      }
+      
+      grouped[subject].push(quiz);
+    });
+    
+    setGroupedQuizzes(grouped);
+    setFilteredGroupedQuizzes(grouped);
+  };
+
   // Filter and sort quizzes
   useEffect(() => {
-    let result = quizzes;
+    if (Object.keys(groupedQuizzes).length === 0) return;
 
-    // Search filter
+    let filteredGroups = { ...groupedQuizzes };
+
+    // Apply search filter
     if (searchTerm) {
-      result = result.filter(
-        (quiz) =>
-          quiz.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          quiz.subject?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filteredGroups = {};
+      Object.keys(groupedQuizzes).forEach(subject => {
+        const filteredQuizzes = groupedQuizzes[subject].filter(
+          (quiz) =>
+            quiz.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            subject.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        
+        if (filteredQuizzes.length > 0) {
+          filteredGroups[subject] = filteredQuizzes;
+        }
+      });
     }
 
-    // Sorting
-    result = [...result].sort((a, b) => {
-      switch (sortBy) {
-        case "newest":
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        case "oldest":
-          return new Date(a.createdAt) - new Date(b.createdAt);
-        case "title":
-          return (a.title || "").localeCompare(b.title || "");
-        case "mostQuestions":
-          return (b.questions?.length || 0) - (a.questions?.length || 0);
-        case "leastQuestions":
-          return (a.questions?.length || 0) - (b.questions?.length || 0);
-        default:
-          return 0;
-      }
+    // Apply sorting to each subject's quizzes
+    Object.keys(filteredGroups).forEach(subject => {
+      filteredGroups[subject] = [...filteredGroups[subject]].sort((a, b) => {
+        switch (sortBy) {
+          case "newest":
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          case "oldest":
+            return new Date(a.createdAt) - new Date(b.createdAt);
+          case "title":
+            return (a.title || "").localeCompare(b.title || "");
+          case "mostQuestions":
+            return (b.questions?.length || 0) - (a.questions?.length || 0);
+          case "leastQuestions":
+            return (a.questions?.length || 0) - (b.questions?.length || 0);
+          default:
+            return 0;
+        }
+      });
     });
 
-    setFilteredQuizzes(result);
-  }, [quizzes, searchTerm, sortBy]);
+    setFilteredGroupedQuizzes(filteredGroups);
+  }, [groupedQuizzes, searchTerm, sortBy]);
+
+  // Toggle subject expansion
+  const toggleSubject = (subject) => {
+    setExpandedSubject(expandedSubject === subject ? null : subject);
+  };
 
   // Format date safely
   const formatDate = (dateString) => {
@@ -77,6 +113,13 @@ const UserQuizzes = ({ level, faculty }) => {
       month: "short",
       day: "numeric",
     });
+  };
+
+  // Calculate total quiz count
+  const getTotalQuizCount = () => {
+    return Object.values(filteredGroupedQuizzes).reduce(
+      (total, quizzes) => total + quizzes.length, 0
+    );
   };
 
   if (loading) {
@@ -150,17 +193,17 @@ const UserQuizzes = ({ level, faculty }) => {
           </div>
 
           {/* Results Count */}
-          <p className="text-sm text-gray-600 mb-4">
-            Showing {filteredQuizzes.length} of {quizzes.length} quizzes
+          <p className="text-sm text-gray-600">
+            Showing {getTotalQuizCount()} quizzes in {Object.keys(filteredGroupedQuizzes).length} subjects
           </p>
         </div>
 
-        {/* Quiz Grid */}
-        {filteredQuizzes.length === 0 ? (
+        {/* Subject Cards */}
+        {Object.keys(filteredGroupedQuizzes).length === 0 ? (
           <div className="bg-white rounded-xl shadow-md p-8 text-center">
             <div className="text-5xl mb-4">📚</div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              {searchTerm ? "No quizzes match your search" : "No quizzes available"}
+              {searchTerm ? "No subjects match your search" : "No quizzes available"}
             </h3>
             <p className="text-gray-600">
               {searchTerm
@@ -169,47 +212,82 @@ const UserQuizzes = ({ level, faculty }) => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredQuizzes.map((quiz) => (
-              <div
-                key={quiz._id}
-                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-100"
-              >
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800 line-clamp-2">{quiz.title}</h3>
-                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                      {quiz.subject || "N/A"}
-                    </span>
-                  </div>
-
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <FaBook className="mr-2" />
-                      <span>Level: {quiz.level || "N/A"}</span>
-                    </div>
-
-                    <div className="flex items-center text-sm text-gray-600">
-                      <FaQuestionCircle className="mr-2" />
-                      <span>{quiz.questions?.length || 0} Questions</span>
-                    </div>
-
-                    <div className="flex items-center text-sm text-gray-600">
-                      <FaClock className="mr-2" />
-                      <span>Created: {formatDate(quiz.createdAt)}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                    onClick={() => navigate(`/user/studentplayquiz/${quiz._id}`)}
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">Subjects</h2>
+            <p className="text-gray-600 mb-4">Click on a subject to view its quizzes</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {Object.keys(filteredGroupedQuizzes).map((subject) => {
+                const subjectQuizzes = filteredGroupedQuizzes[subject];
+                const isExpanded = expandedSubject === subject;
+                
+                return (
+                  <div 
+                    key={subject} 
+                    className={`bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 ${isExpanded ? 'ring-2 ring-blue-500' : 'hover:shadow-lg'}`}
                   >
-                    <FaPlay className="text-sm" />
-                    Start Quiz
-                  </button>
-                </div>
-              </div>
-            ))}
+                    {/* Subject Card Header */}
+                    <div 
+                      className="p-5 cursor-pointer"
+                      onClick={() => toggleSubject(subject)}
+                    >
+                      <div className="flex justify-between items-center mb-3">
+                        <div className="bg-blue-100 p-2 rounded-lg">
+                          <FaBook className="text-blue-600 text-xl" />
+                        </div>
+                        <FaChevronRight className={`text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                      </div>
+                      
+                      <h3 className="font-semibold text-lg text-gray-800 mb-2">{subject}</h3>
+                      
+                      <div className="flex items-center text-sm text-gray-600 mb-2">
+                        <FaGraduationCap className="mr-2" />
+                        <span>Level: {level}</span>
+                      </div>
+                      
+                      <div className="bg-gray-100 rounded-full px-3 py-1 text-sm text-gray-700">
+                        {subjectQuizzes.length} quiz{subjectQuizzes.length !== 1 ? 'zes' : ''}
+                      </div>
+                    </div>
+                    
+                    {/* Quizzes List (shown when expanded) */}
+                    {isExpanded && (
+                      <div className="border-t p-5 bg-gray-50 animate-fadeIn">
+                        <h4 className="font-medium text-gray-700 mb-4 flex items-center">
+                          <span className="h-2 w-2 bg-blue-500 rounded-full mr-2"></span>
+                          Quizzes in {subject}
+                        </h4>
+                        
+                        <div className="space-y-4">
+                          {subjectQuizzes.map((quiz) => (
+                            <div
+                              key={quiz._id}
+                              className="bg-white border rounded-lg p-4 hover:border-blue-300 transition-colors"
+                            >
+                              <h5 className="font-medium text-gray-800">{quiz.title}</h5>
+                              <div className="flex items-center text-sm text-gray-600 mt-2">
+                                <FaQuestionCircle className="mr-1" />
+                                <span>{quiz.questions?.length || 0} questions</span>
+                                <span className="mx-2">•</span>
+                                <FaClock className="mr-1" />
+                                <span>Created: {formatDate(quiz.createdAt)}</span>
+                              </div>
+
+                              <button
+                                className="mt-3 w-full bg-green-500 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-green-600 transition text-sm font-medium"
+                                onClick={() => navigate(`/user/studentplayquiz/${quiz._id}`)}
+                              >
+                                <FaPlay /> Start Quiz
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

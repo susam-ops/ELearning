@@ -1,46 +1,114 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { getTeacherApi } from "../api/teacher.api";
-import { deleteTeacherApi } from "../api/teacher.api";
-import { useLearning } from "../context/LearningContext";
+import React, { useState, useEffect } from "react";
+import {
+  getCourseApi,
+  deleteCourseApi,
+  updateCourseApi,
+} from "../api/course.api";
+import { FaBook, FaClock, FaListOl, FaTrash } from "react-icons/fa";
 
-function Teacherdetails() {
-  const [teachers, setTeachers] = useState([]);
+function Coursedetails() {
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { setTeacher } = useLearning();
+  const [editingCourse, setEditingCourse] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    teacherName: "",
+    level: "",
+    faculty: "",
+    subject: "",
+    duration: "",
+    chapters: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  console.log("Teachers: ", teachers);
-
-  // Fetch teacher details when component mounts
   useEffect(() => {
-    console.log("useEffects in TeacherDetails");
-    const fetchTeacherDetails = async () => {
+    const fetchCoursesDetails = async () => {
       try {
-        console.log("check useEffec");
-        const res = await getTeacherApi();
-        console.log("res is: ", res);
-        setTeachers(res?.user ?? []);
-        setTeacher(res?.user ?? []);
+        const res = await getCourseApi();
+        setCourses(res?.user || []);
       } catch (error) {
-        console.error("Error fetching teacher details:", error);
+        console.error("Error fetching courses:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTeacherDetails();
+    fetchCoursesDetails();
   }, []);
 
   const handleDelete = async (_id) => {
-    if (window.confirm("Are you sure you want to delete this teacher?")) {
+    if (window.confirm("Are you sure you want to delete this course?")) {
       try {
-        await deleteTeacherApi(_id);
-        setTeachers(teachers.filter((teacher) => teacher._id !== _id));
+        await deleteCourseApi(_id);
+        setCourses(courses.filter((course) => course._id !== _id));
       } catch (error) {
-        console.error("Error deleting teacher:", error);
-        alert("Failed to delete teacher.");
+        console.error("Error deleting course:", error);
+        alert("Failed to delete course.");
       }
     }
+  };
+
+  const handleEditClick = (course) => {
+    setEditingCourse(course._id);
+    setEditFormData({
+      teacherName: course.teacherId?.userId?.fullName || "",
+      level: course.level || "",
+      faculty: course.faculty || "",
+      subject: course.subject || "",
+      duration: course.duration || "",
+      chapters: course.chapters || "",
+    });
+  };
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData({
+      ...editFormData,
+      [name]: value,
+    });
+  };
+
+  const handleEditFormSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const courseBefore = courses.find((c) => c._id === editingCourse);
+
+      // Build only changed data
+      const changedData = {};
+      if (editFormData.level !== courseBefore.level)
+        changedData.level = editFormData.level;
+      if (editFormData.faculty !== courseBefore.faculty)
+        changedData.faculty = editFormData.faculty;
+      if (editFormData.subject !== courseBefore.subject)
+        changedData.subject = editFormData.subject;
+      if (editFormData.duration !== courseBefore.duration)
+        changedData.duration = editFormData.duration;
+      if (editFormData.chapters !== courseBefore.chapters)
+        changedData.chapters = editFormData.chapters;
+
+      const updatedCourse = await updateCourseApi(editingCourse, changedData);
+
+      setCourses(
+        courses.map((course) =>
+          course._id === editingCourse
+            ? { ...course, ...updatedCourse }
+            : course
+        )
+      );
+
+      setEditingCourse(null);
+      alert("Course updated successfully!");
+    } catch (error) {
+      console.error("Error updating course:", error);
+      alert("Failed to update course.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCourse(null);
   };
 
   return (
@@ -48,18 +116,22 @@ function Teacherdetails() {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-indigo-900">
-              Teacher Management
+            <h1 className="text-3xl font-bold text-indigo-900 flex items-center">
+              <FaBook className="mr-3" />
+              Course Management
             </h1>
             <p className="text-indigo-600 mt-2">
-              Manage all teachers in the system
+              Manage all courses in the system
             </p>
           </div>
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+          <div className="flex justify-center items-center h-64 bg-white rounded-xl shadow-lg">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+              <p className="text-indigo-800 font-medium">Loading courses...</p>
+            </div>
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -68,16 +140,10 @@ function Teacherdetails() {
                 <thead className="bg-indigo-700">
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
-                      ID
+                      Teacher
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
-                      Phone
+                      Level
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
                       Faculty
@@ -86,79 +152,61 @@ function Teacherdetails() {
                       Subject
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
+                      Duration
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
+                      Chapters
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {teachers.length > 0 ? (
-                    teachers.map((teacher, index) => (
-                      <tr key={teacher._id} className="hover:bg-indigo-50 transition-colors">
+                  {courses.length > 0 ? (
+                    courses.map((course) => (
+                      <tr
+                        key={course._id}
+                        className="hover:bg-indigo-50 transition-colors"
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-indigo-900 bg-indigo-100 rounded-full w-8 h-8 flex items-center justify-center">
-                            {index + 1}
+                          {course.teacherId?.userId?.fullName || "N/A"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {course.level || "N/A"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {course.faculty || "N/A"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {course.subject || "N/A"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <FaClock className="mr-1 text-indigo-500" />
+                            {course.duration || "N/A"}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold">
-                                {teacher?.userDetails?.fullName?.charAt(0) || "T"}
-                              </div>
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
-                                {teacher?.userDetails?.fullName || "N/A"}
-                              </div>
-                            </div>
+                            <FaListOl className="mr-1 text-indigo-500" />
+                            {course.chapters || "0"}
                           </div>
                         </td>
+
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-500 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                            </svg>
-                            {teacher?.userDetails?.email || "N/A"}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {teacher?.phone ? (
-                            <span className="inline-flex items-center">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-500 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7zm3 14a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-                              </svg>
-                              {teacher.phone}
-                            </span>
-                          ) : (
-                            <span className="text-red-500 text-xs bg-red-50 px-2 py-1 rounded-full">Not provided</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
-                            {teacher.faculty || "N/A"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {teacher.course || "N/A"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-3">
-                            <Link
-                              to={`/admin/editteacher/${teacher._id}`}
+                            <button
+                              onClick={() => handleEditClick(course)}
                               className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                              </svg>
-                            </Link>
+                              Edit
+                            </button>
                             <button
-                              onClick={() => handleDelete(teacher._id)}
+                              onClick={() => handleDelete(course._id)}
                               className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                              </svg>
+                              <FaTrash />
                             </button>
                           </div>
                         </td>
@@ -166,12 +214,11 @@ function Teacherdetails() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="px-6 py-12 text-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-indigo-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        <h3 className="text-lg font-semibold text-gray-700">No teachers found</h3>
-                        <p className="text-gray-500 mt-1">There are no teachers in the system yet.</p>
+                      <td
+                        colSpan="7"
+                        className="px-6 py-12 text-center text-gray-500"
+                      >
+                        No courses found
                       </td>
                     </tr>
                   )}
@@ -180,9 +227,81 @@ function Teacherdetails() {
             </div>
           </div>
         )}
+
+        {/* Edit Course Modal */}
+        {editingCourse && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <h2 className="text-2xl font-bold text-indigo-900 mb-6">
+                  Edit Course
+                </h2>
+                <form onSubmit={handleEditFormSubmit}>
+                  <input
+                    type="text"
+                    name="level"
+                    placeholder="Level"
+                    value={editFormData.level}
+                    onChange={handleEditFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md mb-3"
+                  />
+                  <input
+                    type="text"
+                    name="faculty"
+                    placeholder="Faculty"
+                    value={editFormData.faculty}
+                    onChange={handleEditFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md mb-3"
+                  />
+                  <input
+                    type="text"
+                    name="subject"
+                    placeholder="Subject"
+                    value={editFormData.subject}
+                    onChange={handleEditFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md mb-3"
+                  />
+                  <input
+                    type="text"
+                    name="duration"
+                    placeholder="Duration"
+                    value={editFormData.duration}
+                    onChange={handleEditFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md mb-3"
+                  />
+                  <input
+                    type="number"
+                    name="chapters"
+                    placeholder="Chapters"
+                    value={editFormData.chapters}
+                    onChange={handleEditFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md mb-6"
+                  />
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Updating..." : "Update Course"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-export default Teacherdetails;
+export default Coursedetails;

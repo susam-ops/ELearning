@@ -186,9 +186,9 @@ const Mycourses = ({ courses }) => {
                   </div>
 
                   {/* Action Button */}
-                  <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition-colors">
+                  {/* <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition-colors">
                     View Course
-                  </button>
+                  </button> */}
                 </div>
               </div>
             ))}

@@ -66,3 +66,21 @@ export const deleteScheduleApi = async (scheduleId) => {
     throw error;
   }
 };
+
+export const updateScheduleApi = async (scheduleId,formData) => {
+  try {
+    const data = await apiClient.request({
+      method: "PUT",
+      url: `/admin/schedules/${scheduleId}`,
+      data:formData,
+      withCredentials: true,
+    });
+
+    console.log("updatescheduleAPI: ",data)
+
+    return data;
+  } catch (error) {
+    console.error("getting schedule failed:", error.message);
+    throw error;
+  }
+};

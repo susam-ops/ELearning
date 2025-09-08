@@ -67,3 +67,21 @@ export const deleteCourseApi = async (courseId) => {
   }
 };
 
+export const updateCourseApi = async (courseId,formData) => {
+  try {
+    const data = await apiClient.request({
+      method: "PUT",
+      url: `/admin/courses/${courseId}`,
+      data:formData,
+      withCredentials: true,
+    });
+
+    console.log("updatecourseAPI: ",data)
+
+    return data;
+  } catch (error) {
+    console.error("getting course failed:", error.message);
+    throw error;
+  }
+};
+

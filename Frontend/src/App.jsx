@@ -48,6 +48,14 @@ import CreateQuiz from "./Teacher/CreateQuiz";
 import TeacherQuiz from "./Teacher/TeacherQuiz";
 import QuizPlay from "./Teacher/QuizPlay";
 import StudentPlayQuiz from "./User/StudentPlayQuiz";
+import Announcement from "./Teacher/Announcement";
+import AddAnnouncement from "./Teacher/AddAnnouncement";
+import MyAnnouncement from "./Teacher/MyAnnouncement";
+import UserAnnouncement from "./User/UserAnnouncement";
+import Class from "./Teacher/Class";
+import CreateClass from "./Teacher/CreateClass";
+import TeacherMeetings from "./Teacher/TeacherMeetings";
+import StudentMeetings from "./User/StudentsMeetings";
 
 
 // Protected Route Component
@@ -221,16 +229,22 @@ function App() {
         <Route path="student" element={<Student faculty={faculty}/>} />
         <Route path="assignment" element={<Assignment teacherId={teacherId}/>} />
         <Route path="myassignment" element={<Myassignment teacherId={teacherId}/>} />
+        <Route path="myannouncement" element={<MyAnnouncement teacherId={teacherId}/>} />
         <Route path="studentsubmit" element={<StudentSubmit teacherId={teacherId}/>} />
         <Route path="addassignment" element={<Addassignment courses={courses} />} />
+        <Route path="addannouncement" element={<AddAnnouncement courses={courses}/>} />
         <Route path="quiz" element={<Quiz teacherId={teacherId}/>} />
         <Route path="teacherquiz" element={<TeacherQuiz teacherId={teacherId}/>} />
         <Route path="playquiz/:quizId" element={<QuizPlay/>} />
+         <Route path="announcement" element={<Announcement teacherId={teacherId}/>} />
         <Route path="createquiz" element={<CreateQuiz courses={courses}/>} />
         <Route path="content" element={<Content teacherId={teacherId}/>} />
         <Route path="addcontent" element={<AddContent courses={courses} />} />
         <Route path="schedule" element={<Schedule teacherId={teacherId}/>} />
         <Route path="scheduletable" element={<Scheduletable teacherId={teacherId}/>} />
+        <Route path="class" element={<Class teacherId={teacherId}/>} />
+        <Route path="teachermeeting" element={<TeacherMeetings teacherId={teacherId}/>} />
+        <Route path="createclass" element={<CreateClass courses={courses} teacherId={teacherId}/>} />
         <Route
           path="teacherlogout"
           element={
@@ -261,11 +275,15 @@ function App() {
         <Route path="userschedule" element={<UserSchedule level={level} faculty={faculty}/>} />
         <Route path="userscheduletable" element={<Userscheduletable level={level} faculty={faculty}/>} />
         <Route path="certificate" element={<UserCertificate />} />
+        
+       
         <Route path="assignment" element={<Userassignment level={level} faculty={faculty} studentId={studentId}/>} />
+        <Route path="userannouncement" element={<UserAnnouncement level={level} faculty={faculty}/>} />
         <Route path="userassignment" element={<UserSubmission studentId={studentId}/>} />
         <Route path="quizzes" element={<Userquizzes  level={level} faculty={faculty}/>} />
-        <Route path="studentplayquiz/:quizId" element={<StudentPlayQuiz/>} />
+        <Route path="studentplayquiz/:quizId" element={<StudentPlayQuiz />} />
         <Route path="setting" element={<Usersetting />} />
+        <Route path="studentmeeting" element={<StudentMeetings level={level} faculty={faculty}/>} />
         <Route
           path="logout"
           element={

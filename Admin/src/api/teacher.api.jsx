@@ -67,3 +67,20 @@ export const deleteTeacherApi = async (teacherId) => {
     throw error;
   }
 };
+export const updateTeacherApi = async (teacherId,formData) => {
+  try {
+    const data = await apiClient.request({
+      method: "PUT",
+      url: `/admin/teacher/${teacherId}`,
+      data:formData,
+      withCredentials: true,
+    });
+
+    console.log("GETTEACHER API: ",data)
+
+    return data;
+  } catch (error) {
+    console.error("getting teacher failed:", error.message);
+    throw error;
+  }
+};

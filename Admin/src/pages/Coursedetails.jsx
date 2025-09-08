@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { getCourseApi, deleteCourseApi } from "../api/course.api";
-import { FaBook, FaEdit, FaTrash, FaClock, FaListOl } from "react-icons/fa";
+import { getCourseApi, deleteCourseApi, updateCourseApi } from "../api/course.api";
+import { FaBook, FaEdit, FaTrash, FaClock, FaListOl, FaTimes, FaSave } from "react-icons/fa";
 
 function Coursedetails() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingCourse, setEditingCourse] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    level: "",
+    faculty: "",
+    subject: "",
+    duration: "",
+    chapters: ""
+  });
 
   useEffect(() => {
     console.log("useEffects in CourseDetails");
@@ -37,8 +44,179 @@ function Coursedetails() {
     }
   };
 
+  const handleEditClick = (course) => {
+    setEditingCourse(course._id);
+    setEditFormData({
+      level: course.level || "",
+      faculty: course.faculty || "",
+      subject: course.subject || "",
+      duration: course.duration || "",
+      chapters: course.chapters || ""
+    });
+  };
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData({
+      ...editFormData,
+      [name]: value
+    });
+  };
+
+  const handleEditFormSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const updatedCourse = await updateCourseApi(editingCourse, editFormData);
+      
+      // Update the course in the local state
+      setCourses(courses.map(course => 
+        course._id === editingCourse ? { ...course, ...editFormData } : course
+      ));
+      
+      setEditingCourse(null);
+      alert("Course updated successfully!");
+    } catch (error) {
+      console.error("Error updating course:", error);
+      alert("Failed to update course.");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCourse(null);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      {/* Edit Form Popup */}
+      {editingCourse && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-indigo-900">Edit Course</h3>
+                <button
+                  onClick={handleCancelEdit}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <FaTimes className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleEditFormSubmit}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Level
+                    </label>
+                    <select
+                      name="level"
+                      value={editFormData.level}
+                      onChange={handleEditFormChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    >
+                      <option value="">Select Level</option>
+                      <option value="11">11</option>
+                      <option value="12">12</option>
+                      {/* <option value="Postgraduate">Postgraduate</option> */}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Faculty
+                    </label>
+                     <select
+                      name="level"
+                      value={editFormData.faculty}
+                      onChange={handleEditFormChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    >
+                      <option value="">Select Faculty</option>
+                      <option value="science">Science</option>
+                      <option value="management">Management</option>
+                      {/* <option value="Postgraduate">Postgraduate</option> */}
+                    </select>
+
+
+                    {/* <input
+                      type="text"
+                      name="faculty"
+                      value={editFormData.faculty}
+                      onChange={handleEditFormChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    /> */}
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Subject
+                    </label>
+                    <input
+                      type="text"
+                      name="subject"
+                      value={editFormData.subject}
+                      onChange={handleEditFormChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Duration (hours)
+                    </label>
+                    <input
+                      type="number"
+                      name="duration"
+                      value={editFormData.duration}
+                      onChange={handleEditFormChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                      min="1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Chapters
+                    </label>
+                    <input
+                      type="number"
+                      name="chapters"
+                      value={editFormData.chapters}
+                      onChange={handleEditFormChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                      min="0"
+                    />
+                  </div>
+                </div>
+                
+                <div className="mt-8 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center"
+                  >
+                    <FaSave className="mr-2" />
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -50,7 +228,6 @@ function Coursedetails() {
               Manage all courses in the system
             </p>
           </div>
-         
         </div>
 
         {loading ? (
@@ -143,12 +320,12 @@ function Coursedetails() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-3">
-                            <Link
-                              to={`/admin/editcourse/${course._id}`}
+                            <button
+                              onClick={() => handleEditClick(course)}
                               className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors"
                             >
                               <FaEdit />
-                            </Link>
+                            </button>
                             <button
                               onClick={() => handleDelete(course._id)}
                               className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors"
